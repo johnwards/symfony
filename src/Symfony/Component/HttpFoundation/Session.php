@@ -22,7 +22,7 @@ class Session implements \Serializable
 {
     protected $storage;
     protected $attributes;
-    protected $oldFlashes;
+    protected $readFlashes;
     protected $started;
     protected $options;
 
@@ -61,9 +61,7 @@ class Session implements \Serializable
             $this->attributes['_locale'] = $this->getDefaultLocale();
         }
 
-        // flag current flash messages to be removed at shutdown
-        $this->oldFlashes = array_flip(array_keys($this->attributes['_flash']));
-
+        $this->readFlashes = array();
         $this->started = true;
     }
 
@@ -223,11 +221,18 @@ class Session implements \Serializable
         }
 
         $this->attributes['_flash'] = $values;
+        $this->readFlashes = array();
     }
 
     public function getFlash($name, $default = null)
     {
-        return array_key_exists($name, $this->attributes['_flash']) ? $this->attributes['_flash'][$name] : $default;
+        if (array_key_exists($name, $this->attributes['_flash'])) {
+            //Mark as read. Deletes on next request all read flashes
+            $this->readFlashes[$name] = $this->attributes['_flash'][$name];
+            return $this->attributes['_flash'][$name];
+        }
+        
+        return $default;
     }
 
     public function setFlash($name, $value)
@@ -237,7 +242,7 @@ class Session implements \Serializable
         }
 
         $this->attributes['_flash'][$name] = $value;
-        unset($this->oldFlashes[$name]);
+        unset($this->readFlashes[$name]);
     }
 
     public function hasFlash($name)
@@ -248,18 +253,20 @@ class Session implements \Serializable
     public function removeFlash($name)
     {
         unset($this->attributes['_flash'][$name]);
+        unset($this->readFlashes[$name]);
     }
 
     public function clearFlashes()
     {
         $this->attributes['_flash'] = array();
+        $this->readFlashes = array();
     }
 
     public function save()
     {
         if (true === $this->started) {
             if (isset($this->attributes['_flash'])) {
-                $this->attributes['_flash'] = array_diff_key($this->attributes['_flash'], $this->oldFlashes);
+                $this->attributes['_flash'] = array_diff_key($this->attributes['_flash'], $this->readFlashes);
             }
             $this->storage->write('_symfony2', $this->attributes);
         }
