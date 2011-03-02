@@ -54,8 +54,7 @@ class ParentNamePluginTest extends \PHPUnit_Framework_TestCase
         
         $field = $this->getMock('Symfony\Component\Form\FieldInterface');
         $field->expects($this->never())
-              ->method('getParent')
-              ->will($this->returnValue($parentField));
+              ->method('getParent');
 
         $field->expects($this->once())
               ->method('hasParent')
