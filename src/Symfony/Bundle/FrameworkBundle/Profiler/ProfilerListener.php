@@ -79,6 +79,8 @@ class ProfilerListener
      */
     public function filterCoreResponse(FilterResponseEvent $event)
     {
+        $response = $this->container->get('response');
+        
         if (null !== $this->matcher && !$this->matcher->matches($event->getRequest())) {
             return $response;
         }
@@ -88,7 +90,6 @@ class ProfilerListener
         }
 
         $profiler = $this->container->get('profiler');
-        $response = $this->container->get('response');
 
         if ($parent = $this->container->getCurrentScopedStack('request')) {
             $profiler->setParent($parent['request']['profiler']->getToken());
