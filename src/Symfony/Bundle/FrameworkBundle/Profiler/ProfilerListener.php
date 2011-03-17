@@ -88,6 +88,7 @@ class ProfilerListener
         }
 
         $profiler = $this->container->get('profiler');
+        $response = $this->container->get('response');
 
         if ($parent = $this->container->getCurrentScopedStack('request')) {
             $profiler->setParent($parent['request']['profiler']->getToken());
